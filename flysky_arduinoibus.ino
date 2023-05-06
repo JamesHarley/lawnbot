@@ -17,19 +17,19 @@
 // Define motor pins (use PWM-capable pins on your Arduino board)
 //left front
 const int leftFrontMotor = 3;
-const int leftFrontDirPin = 14;
+const int leftFrontDirPin = 16;
 const int lefFrontDirection = LOW;
 //left rear
 const int leftRearMotor = 5;
-const int leftRearDirPin = 15;
+const int leftRearDirPin = 17;
 const int leftRearDirection = LOW;
 //right front
 const int rightFrontMotor = 6; 
-const int rightFrontDirPin = 16;
+const int rightFrontDirPin = 20;
 const int rightFrontDirection = LOW;
 //right rear
 const int rightRearMotor = 9;
-const int rightRearDirPin = 17;
+const int rightRearDirPin = 21;
 const int rightRearDirection = LOW;
 //mower motor
 const int mowerMotorPin = 10; // Define pin for mower motor
@@ -175,7 +175,7 @@ void motorDrive(){
     //write the direction to the dir pin for each motor
     //print to serial
     
-    // delay(100);
+    delay(100);
     Serial.print("Motor: ");
     Serial.print(i);
     Serial.print(" Direction: ");
@@ -183,7 +183,7 @@ void motorDrive(){
     Serial.print(" PWM: ");
     Serial.println(driveMotorMap[i][3]);
 
-    // digitalWrite(driveMotorMap[i][4], driveMotorMap[i][2]);
+    digitalWrite(driveMotorMap[i][4], driveMotorMap[i][2]);
   }
 
   return;
@@ -233,6 +233,12 @@ void setup() {
   pinMode(rightFrontMotor, OUTPUT);
   pinMode(rightRearMotor, OUTPUT);
   pinMode(mowerMotorPin, OUTPUT); // Set mower motor pin as output
+
+  pinMode(leftFrontDirPin, OUTPUT);
+  pinMode(leftRearDirPin, OUTPUT);
+  pinMode(rightFrontDirPin, OUTPUT);
+  pinMode(rightRearDirPin, OUTPUT);
+
 
 }
 
