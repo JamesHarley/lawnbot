@@ -12,6 +12,19 @@
  
 // Include iBusBM Library
 #include <IBusBM.h>
+
+
+// Define motor pins (use PWM-capable pins on your Arduino board)
+const int leftMotor1Pin = 3;
+const int leftMotor2Pin = 5;
+const int rightMotor1Pin = 6;
+const int rightMotor2Pin = 9;
+
+// Define channel numbers
+const byte steeringChannel = 0; // Channel 1
+const byte forwardBackwardChannel = 1; // Channel 2
+const byte throttleChannel = 2; // Channel 3
+
  
 // Create iBus Object
 IBusBM ibus;
@@ -53,10 +66,34 @@ void setup() {
  
   // Attach iBus object to serial port
   ibus.begin(Serial1);
+  // Set motor pins as outputs
+  pinMode(leftMotor1Pin, OUTPUT);
+  pinMode(leftMotor2Pin, OUTPUT);
+  pinMode(rightMotor1Pin, OUTPUT);
+  pinMode(rightMotor2Pin, OUTPUT);
 }
- 
+
+
 void loop() {
- 
+  // Read steering, forward/backward, and throttle values from channels
+  int steering = readChannel(steeringChannel, -100, 100, 0);
+  int forwardBackward = readChannel(forwardBackwardChannel, -100, 100, 0);
+  int throttle = readChannel(throttleChannel, -100, 100, 0);
+
+  // Calculate left and right motor speeds
+  int leftMotorSpeed = constrain(forwardBackward + steering, -100, 100);
+  int rightMotorSpeed = constrain(forwardBackward - steering, -100, 100);
+
+  // Apply throttle
+  leftMotorSpeed = map(leftMotorSpeed, -100, 100, -255, 255) * throttle / 100;
+  rightMotorSpeed = map(rightMotorSpeed, -100, 100, -255, 255) * throttle / 100;
+
+  // Write PWM values to motor pins
+  analogWrite(leftMotor1Pin, leftMotorSpeed >= 0 ? leftMotorSpeed : 0);
+  analogWrite(leftMotor2Pin, leftMotorSpeed <= 0 ? -leftMotorSpeed : 0);
+  analogWrite(rightMotor1Pin, rightMotorSpeed >= 0 ? rightMotorSpeed : 0);
+  analogWrite(rightMotor2Pin, rightMotorSpeed <= 0 ? -rightMotorSpeed : 0);
+  
   // Cycle through first 5 channels and determine values
   // Print values to serial monitor
   // Note IBusBM library labels channels starting with "0"
