@@ -15,10 +15,23 @@
 
 
 // Define motor pins (use PWM-capable pins on your Arduino board)
-const int leftMotor1Pin = 3;
-const int leftMotor2Pin = 5;
-const int rightMotor1Pin = 6;
-const int rightMotor2Pin = 9;
+//left front
+const int leftFrontMotor = 3;
+const int leftFrontDirPin = 14;
+const int lefFrontDirection = LOW;
+//left rear
+const int leftRearMotor = 5;
+const int leftRearDirPin = 15;
+const int leftRearDirection = LOW;
+//right front
+const int rightFrontMotor = 6; 
+const int rightFrontDirPin = 16;
+const int rightFrontDirection = LOW;
+//right rear
+const int rightRearMotor = 9;
+const int rightRearDirPin = 17;
+const int rightRearDirection = LOW;
+//mower motor
 const int mowerMotorPin = 10; // Define pin for mower motor
 
 // Define channel numbers
@@ -28,6 +41,156 @@ const byte throttleChannel = 2; // Channel 3
 const byte mowerSpeedChannel = 4; // Channel 5
 const byte mowerOnOffChannel = 6; // Channel 7
 const byte masterOnOffChannel = 9; // Channel 10
+
+// define a new pin for the motor direction on each motor (except the mower motor)
+
+
+// create a map for the motor pins, the channel, the direction, and the pwm value
+// use the constants defined above for the motor pins and channel numbers
+// use the constants HIGH and LOW for the direction
+// use the pwm value from the channel for the pwm value
+int driveMotorMap[4][5] = {
+  {leftFrontMotor, steeringChannel, lefFrontDirection, 0,  leftFrontDirPin},
+  {leftRearMotor, steeringChannel, leftRearDirection, 0 , leftRearDirPin},
+  {rightFrontMotor, steeringChannel, rightFrontDirection, 0 , rightFrontDirPin},
+  {rightRearMotor, steeringChannel, rightRearDirection, 0 , rightRearDirPin}
+};
+//Store previous driveMotorMap in a temporary variable to indicate the direction so we can handle the ramp down
+int tempDriveMotorMap[4][5] = {
+  {leftFrontMotor, steeringChannel, lefFrontDirection, 0,  leftFrontDirPin},
+  {leftRearMotor, steeringChannel, leftRearDirection, 0 , leftRearDirPin},
+  {rightFrontMotor, steeringChannel, rightFrontDirection, 0 , rightFrontDirPin},
+  {rightRearMotor, steeringChannel, rightRearDirection, 0 , rightRearDirPin}
+};
+
+void motorDrive(){
+  //read the steering channel value
+  int steering = readChannel(steeringChannel, -100, 100, 0);
+  int forwardBackward = readChannel(forwardBackwardChannel, -100, 100, 0);
+  int throttle = readChannel(throttleChannel, -100, 100, 0);
+
+  int direction = HIGH;
+  //Straight forward or backward
+  if(steering == 0){
+    if(forwardBackward > 0){
+      direction = LOW;
+      //set map
+    }
+    else{
+      direction = HIGH;
+    }
+    //all motors the same direction
+    for(int i = 0; i < 4; i++){
+      driveMotorMap[i][2] = direction;
+    }
+  }
+  if(steering > 0 && forwardBackward > 0){
+    //turning right and forward
+    //left motors forward
+    //right motors backward
+    for(int i = 0; i < 2; i++){
+      driveMotorMap[i][2] = LOW;
+    }
+    for(int i = 2; i < 4; i++){
+      driveMotorMap[i][2] = HIGH;
+    }
+  }
+  if(steering < 0 && forwardBackward > 0){
+    //turning left and forward
+    //left motors backward
+    //right motors forward
+    for(int i = 0; i < 2; i++){
+      driveMotorMap[i][2] = HIGH;
+    }
+    for(int i = 2; i < 4; i++){
+      driveMotorMap[i][2] = LOW;
+    }
+  }
+  if(steering > 0 && forwardBackward < 0){
+    //turning right and backward
+    //left motors forward
+    //right motors backward
+    for(int i = 0; i < 2; i++){
+      driveMotorMap[i][2] = HIGH;
+    }
+    for(int i = 2; i < 4; i++){
+      driveMotorMap[i][2] = LOW;
+    }
+  }
+  if(steering < 0 && forwardBackward < 0){
+    //turning left and backward
+    //left motors backward
+    //right motors forward
+    for(int i = 0; i < 2; i++){
+      driveMotorMap[i][2] = LOW;
+    }
+    for(int i = 2; i < 4; i++){
+      driveMotorMap[i][2] = HIGH;
+    }
+  }
+  int speed = forwardBackward >= 0 ? forwardBackward : forwardBackward * -1;
+  //if forwardBackward is greather than 100 then set it to 100
+  if(speed > 1){
+    speed = 1;
+
+  } else {
+    speed = 0;
+  }
+  // convert throttle to a positive number from -100 to 100 equals 1 to 100
+  throttle = map(throttle, -100, 100, 0, 100);
+  //write the pwm values to the motors
+  for(int i = 0; i < 4; i++){
+    //convert forwardBackward to a positive value
+    
+    
+   
+    //map the pwm value to the motor
+    driveMotorMap[i][3] = speed * ( throttle / 100.0) * 255.0;
+    //compare the current pwm value to the previous pwm value and if it is different then we need to ramp up or down
+    if(tempDriveMotorMap[i][3] != driveMotorMap[i][3]){
+      // //print direction change to serial 
+      // Serial.print("Motor: ");
+      // Serial.print(i);
+      // Serial.print(" Direction: ");
+      // Serial.print(driveMotorMap[i][2]);
+      // Serial.print(" PWM: ");
+      // Serial.println(driveMotorMap[i][3]);
+      
+      //if the current pwm value is greater than the previous pwm value then we need to ramp up
+      if(tempDriveMotorMap[i][3] < driveMotorMap[i][3]){
+        //we need to ramp up the pwm values for the motors that are changing direction
+        analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
+       
+
+      }
+      //if the current pwm value is less than the previous pwm value then we need to ramp down
+      if(tempDriveMotorMap[i][3] > driveMotorMap[i][3]){
+        //we need to ramp down the pwm values for the motors that are changing direction
+        analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
+      }
+    }
+    //if the current pwm value is the same as the previous pwm value then we don't need to ramp up or down
+    analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
+    //write the direction to the dir pin for each motor
+    //print to serial
+    
+    delay(100);
+    Serial.print("Motor: ");
+    Serial.print(i);
+    Serial.print(" Direction: ");
+    Serial.print(driveMotorMap[i][2]);
+    Serial.print(" PWM: ");
+    Serial.println(driveMotorMap[i][3]);
+
+    digitalWrite(driveMotorMap[i][4], driveMotorMap[i][2]);
+    
+  }
+
+  return;
+}
+
+
+
  
 // Create iBus Object
 IBusBM ibus;
@@ -49,12 +212,7 @@ bool readSwitch(byte channelInput, bool defaultValue) {
 
 // Read the channel and return a boolean value
 int read3Switch(byte channelInput, int defaultValue) {
-  Serial.print("Ch");
-
   int ch = readChannel(channelInput, 0, 100, 0);
-  Serial.print("----Ch read3:: " );
-  Serial.print(ch);
-  Serial.print(" -----");
   if(ch == 50){
     return 1;
   }
@@ -70,13 +228,15 @@ void setup() {
   // Attach iBus object to serial port
   ibus.begin(Serial1);
   // Set motor pins as outputs
-  pinMode(leftMotor1Pin, OUTPUT);
-  pinMode(leftMotor2Pin, OUTPUT);
-  pinMode(rightMotor1Pin, OUTPUT);
-  pinMode(rightMotor2Pin, OUTPUT);
+  pinMode(leftFrontMotor, OUTPUT);
+  pinMode(leftRearMotor, OUTPUT);
+  pinMode(rightFrontMotor, OUTPUT);
+  pinMode(rightRearMotor, OUTPUT);
   pinMode(mowerMotorPin, OUTPUT); // Set mower motor pin as output
 
 }
+
+
 
 
 void loop() {
@@ -85,33 +245,22 @@ void loop() {
 
   // If the master switch is off, turn off all motors and reset states
   if (!masterOn) {
-    analogWrite(leftMotor1Pin, 0);
-    analogWrite(leftMotor2Pin, 0);
-    analogWrite(rightMotor1Pin, 0);
-    analogWrite(rightMotor2Pin, 0);
+    analogWrite(leftFrontMotor, 0);
+    analogWrite(leftRearMotor, 0);
+    analogWrite(rightFrontMotor, 0);
+    analogWrite(rightRearMotor, 0);
     analogWrite(mowerMotorPin, 0);
     // Reset any other states as needed
     return; // Skip the rest of the loop
   }
-
-  // Read steering, forward/backward, and throttle values from channels
-  int steering = readChannel(steeringChannel, -100, 100, 0);
-  int forwardBackward = readChannel(forwardBackwardChannel, -100, 100, 0);
-  int throttle = readChannel(throttleChannel, -100, 100, 0);
-
-  // Calculate left and right motor speeds
-  int leftMotorSpeed = constrain(forwardBackward + steering, -100, 100);
-  int rightMotorSpeed = constrain(forwardBackward - steering, -100, 100);
-
-  // Apply throttle
-  leftMotorSpeed = map(leftMotorSpeed, -100, 100, -255, 255) * throttle / 100;
-  rightMotorSpeed = map(rightMotorSpeed, -100, 100, -255, 255) * throttle / 100;
-
-  // Write PWM values to motor pins
-  analogWrite(leftMotor1Pin, leftMotorSpeed >= 0 ? leftMotorSpeed : 0);
-  analogWrite(leftMotor2Pin, leftMotorSpeed <= 0 ? -leftMotorSpeed : 0);
-  analogWrite(rightMotor1Pin, rightMotorSpeed >= 0 ? rightMotorSpeed : 0);
-  analogWrite(rightMotor2Pin, rightMotorSpeed <= 0 ? -rightMotorSpeed : 0);
+  //store driveMotorMap in a temporary variable to indicate the direction so we can handle the ramp down
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 4; j++){
+      tempDriveMotorMap[i][j] = driveMotorMap[i][j];
+    }
+  }
+  
+  motorDrive();
   
   // Read mower motor on/off state and speed value
   bool mowerOn = readSwitch(mowerOnOffChannel, false);
@@ -140,16 +289,16 @@ void loop() {
   }
   
   // Print channel 6 (switch) boolean value
-  Serial.print("Ch6: ");
+  Serial.print("Ch7: ");
   Serial.print(readSwitch(6, false));
   Serial.print(" | ");
-  Serial.print("Ch7: ");
+  Serial.print("Ch8: ");
   Serial.print(readSwitch(7, false));
   Serial.print(" | ");
-  Serial.print("Ch8: ");
+  Serial.print("Ch9: ");
   Serial.print(read3Switch(8, 0));
   Serial.print(" | ");
-  Serial.print("Ch9: ");
+  Serial.print("Ch10: ");
   Serial.print(readSwitch(9, false));
   Serial.println();  
   
