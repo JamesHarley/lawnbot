@@ -27,6 +27,7 @@ const byte forwardBackwardChannel = 1; // Channel 2
 const byte throttleChannel = 2; // Channel 3
 const byte mowerSpeedChannel = 4; // Channel 5
 const byte mowerOnOffChannel = 6; // Channel 7
+const byte masterOnOffChannel = 9; // Channel 10
  
 // Create iBus Object
 IBusBM ibus;
@@ -79,6 +80,20 @@ void setup() {
 
 
 void loop() {
+  // Read the state of the master on/off switch from channel 10
+  bool masterOn = readSwitch(masterOnOffChannel, true);
+
+  // If the master switch is off, turn off all motors and reset states
+  if (!masterOn) {
+    analogWrite(leftMotor1Pin, 0);
+    analogWrite(leftMotor2Pin, 0);
+    analogWrite(rightMotor1Pin, 0);
+    analogWrite(rightMotor2Pin, 0);
+    analogWrite(mowerMotorPin, 0);
+    // Reset any other states as needed
+    return; // Skip the rest of the loop
+  }
+
   // Read steering, forward/backward, and throttle values from channels
   int steering = readChannel(steeringChannel, -100, 100, 0);
   int forwardBackward = readChannel(forwardBackwardChannel, -100, 100, 0);
