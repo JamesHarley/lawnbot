@@ -19,12 +19,14 @@ const int leftMotor1Pin = 3;
 const int leftMotor2Pin = 5;
 const int rightMotor1Pin = 6;
 const int rightMotor2Pin = 9;
+const int mowerMotorPin = 10; // Define pin for mower motor
 
 // Define channel numbers
 const byte steeringChannel = 0; // Channel 1
 const byte forwardBackwardChannel = 1; // Channel 2
 const byte throttleChannel = 2; // Channel 3
-
+const byte mowerSpeedChannel = 4; // Channel 5
+const byte mowerOnOffChannel = 6; // Channel 7
  
 // Create iBus Object
 IBusBM ibus;
@@ -71,6 +73,8 @@ void setup() {
   pinMode(leftMotor2Pin, OUTPUT);
   pinMode(rightMotor1Pin, OUTPUT);
   pinMode(rightMotor2Pin, OUTPUT);
+  pinMode(mowerMotorPin, OUTPUT); // Set mower motor pin as output
+
 }
 
 
@@ -94,6 +98,19 @@ void loop() {
   analogWrite(rightMotor1Pin, rightMotorSpeed >= 0 ? rightMotorSpeed : 0);
   analogWrite(rightMotor2Pin, rightMotorSpeed <= 0 ? -rightMotorSpeed : 0);
   
+  // Read mower motor on/off state and speed value
+  bool mowerOn = readSwitch(mowerOnOffChannel, false);
+  int mowerSpeed = readChannel(mowerSpeedChannel, 0, 255, 0);
+
+  // Control mower motor
+  if (mowerOn) {
+    // If mower is on set the speed based on the value from channel 5
+      analogWrite(mowerMotorPin, mowerSpeed);
+    } else {
+      // If mower is off, set the speed to zero
+      analogWrite(mowerMotorPin, 0);
+  }
+
   // Cycle through first 5 channels and determine values
   // Print values to serial monitor
   // Note IBusBM library labels channels starting with "0"
