@@ -166,6 +166,7 @@ void motorDrive(){
       //if the current pwm value is less than the previous pwm value then we need to ramp down
       if(tempDriveMotorMap[i][3] > driveMotorMap[i][3]){
         //we need to ramp down the pwm values for the motors that are changing direction
+      
         analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
       }
     }
@@ -174,7 +175,7 @@ void motorDrive(){
     //write the direction to the dir pin for each motor
     //print to serial
     
-    delay(100);
+    // delay(100);
     Serial.print("Motor: ");
     Serial.print(i);
     Serial.print(" Direction: ");
@@ -182,8 +183,7 @@ void motorDrive(){
     Serial.print(" PWM: ");
     Serial.println(driveMotorMap[i][3]);
 
-    digitalWrite(driveMotorMap[i][4], driveMotorMap[i][2]);
-    
+    // digitalWrite(driveMotorMap[i][4], driveMotorMap[i][2]);
   }
 
   return;
