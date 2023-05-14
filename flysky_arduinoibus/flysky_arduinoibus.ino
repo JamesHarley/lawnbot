@@ -67,6 +67,20 @@ int tempDriveMotorMap[4][5] = {
   {rightRearMotor, steeringChannel, rightRearDirection, 0 , rightRearDirPin}
 };
 
+//Quick Fix
+void directionCorrection(){
+  for(int i = 0; i < 4; i++){
+    if(i == 3 || i == 4){
+      //flip HIGH and LOW
+      if(driveMotorMap[i][2] == HIGH){
+        driveMotorMap[i][2] = LOW;
+      } else {
+        driveMotorMap[i][2] = HIGH;
+      }
+    }
+  }
+}
+
 void motorDrive(){
   //read the steering channel value
   int steering = readChannel(steeringChannel, -100, 100, 0);
@@ -134,8 +148,10 @@ void motorDrive(){
       driveMotorMap[i][2] = HIGH;
     }
   }
+  //fix motor direction caused by meridian flip
+  directionCorrection();
   int speed = forwardBackward >= 0 ? forwardBackward : forwardBackward * -1;
-  //if forwardBackward is greather than 100 then set it to 100
+  //if forwardBackward is greater than 100 then set it to 100
   if(speed > 1){
     speed = 1;
 
@@ -146,22 +162,10 @@ void motorDrive(){
   throttle = map(throttle, -100, 100, 0, 100);
   //write the pwm values to the motors
   for(int i = 0; i < 4; i++){
-    //convert forwardBackward to a positive value
-    
-    
-   
     //map the pwm value to the motor
     driveMotorMap[i][3] = speed * ( throttle / 100.0) * 255.0;
     //compare the current pwm value to the previous pwm value and if it is different then we need to ramp up or down
     if(tempDriveMotorMap[i][3] != driveMotorMap[i][3]){
-      // //print direction change to serial 
-      // Serial.print("Motor: ");
-      // Serial.print(i);
-      // Serial.print(" Direction: ");
-      // Serial.print(driveMotorMap[i][2]);
-      // Serial.print(" PWM: ");
-      // Serial.println(driveMotorMap[i][3]);
-      
       //if the current pwm value is greater than the previous pwm value then we need to ramp up
       if(tempDriveMotorMap[i][3] < driveMotorMap[i][3]){
         //we need to ramp up the pwm values for the motors that are changing direction
