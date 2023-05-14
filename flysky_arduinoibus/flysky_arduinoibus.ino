@@ -13,16 +13,18 @@
 // Include iBusBM Library
 #include <IBusBM.h>
 
+//TODO: Speed curve
+//TODO: rewrite direction flip using function for left vs right
 
 // Define motor pins (use PWM-capable pins on your Arduino board)
 //left front
 const int leftFrontMotor = 3;
 const int leftFrontDirPin = 16;
-const int lefFrontDirection = LOW;
+const int lefFrontDirection = HIGH;
 //left rear
 const int leftRearMotor = 5;
 const int leftRearDirPin = 17;
-const int leftRearDirection = LOW;
+const int leftRearDirection = HIGH;
 //right front
 const int rightFrontMotor = 6; 
 const int rightFrontDirPin = 20;
@@ -49,6 +51,7 @@ const byte masterOnOffChannel = 9; // Channel 10
 // use the constants defined above for the motor pins and channel numbers
 // use the constants HIGH and LOW for the direction
 // use the pwm value from the channel for the pwm value
+//LF, LR, RF, RR
 int driveMotorMap[4][5] = {
   {leftFrontMotor, steeringChannel, lefFrontDirection, 0,  leftFrontDirPin},
   {leftRearMotor, steeringChannel, leftRearDirection, 0 , leftRearDirPin},
@@ -56,6 +59,7 @@ int driveMotorMap[4][5] = {
   {rightRearMotor, steeringChannel, rightRearDirection, 0 , rightRearDirPin}
 };
 //Store previous driveMotorMap in a temporary variable to indicate the direction so we can handle the ramp down
+//LF, LR, RF, RR
 int tempDriveMotorMap[4][5] = {
   {leftFrontMotor, steeringChannel, lefFrontDirection, 0,  leftFrontDirPin},
   {leftRearMotor, steeringChannel, leftRearDirection, 0 , leftRearDirPin},
@@ -71,6 +75,7 @@ void motorDrive(){
 
   int direction = HIGH;
   //Straight forward or backward
+  //LF, LR, RF, RR
   if(steering == 0){
     if(forwardBackward > 0){
       direction = LOW;
@@ -88,6 +93,7 @@ void motorDrive(){
     //turning right and forward
     //left motors forward
     //right motors backward
+
     for(int i = 0; i < 2; i++){
       driveMotorMap[i][2] = LOW;
     }
