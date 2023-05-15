@@ -70,7 +70,7 @@ int tempDriveMotorMap[4][5] = {
 //Quick Fix
 void directionCorrection(){
   for(int i = 0; i < 4; i++){
-    if(i == 3 || i == 4){
+    if(i == 2 || i == 3){
       //flip HIGH and LOW
       if(driveMotorMap[i][2] == HIGH){
         driveMotorMap[i][2] = LOW;
@@ -90,20 +90,20 @@ void motorDrive(){
   int direction = HIGH;
   //Straight forward or backward
   //LF, LR, RF, RR
-  if(steering == 0){
+  if(steering > -30 && steering < 30){
     if(forwardBackward > 0){
-      direction = LOW;
+      direction = HIGH;
       //set map
     }
     else{
-      direction = HIGH;
+      direction = LOW;
     }
     //all motors the same direction
     for(int i = 0; i < 4; i++){
       driveMotorMap[i][2] = direction;
     }
   }
-  if(steering > 0 && forwardBackward > 0){
+  if(steering > 30 && forwardBackward > 0){
     //turning right and forward
     //left motors forward
     //right motors backward
@@ -115,7 +115,7 @@ void motorDrive(){
       driveMotorMap[i][2] = HIGH;
     }
   }
-  if(steering < 0 && forwardBackward > 0){
+  if(steering < -30 && forwardBackward > 0){
     //turning left and forward
     //left motors backward
     //right motors forward
@@ -126,7 +126,7 @@ void motorDrive(){
       driveMotorMap[i][2] = LOW;
     }
   }
-  if(steering > 0 && forwardBackward < 0){
+  if(steering > 30 && forwardBackward < 0){
     //turning right and backward
     //left motors forward
     //right motors backward
@@ -137,7 +137,7 @@ void motorDrive(){
       driveMotorMap[i][2] = LOW;
     }
   }
-  if(steering < 0 && forwardBackward < 0){
+  if(steering < -30 && forwardBackward < 0){
     //turning left and backward
     //left motors backward
     //right motors forward
@@ -165,21 +165,21 @@ void motorDrive(){
     //map the pwm value to the motor
     driveMotorMap[i][3] = speed * ( throttle / 100.0) * 255.0;
     //compare the current pwm value to the previous pwm value and if it is different then we need to ramp up or down
-    if(tempDriveMotorMap[i][3] != driveMotorMap[i][3]){
-      //if the current pwm value is greater than the previous pwm value then we need to ramp up
-      if(tempDriveMotorMap[i][3] < driveMotorMap[i][3]){
-        //we need to ramp up the pwm values for the motors that are changing direction
-        analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
+    // if(tempDriveMotorMap[i][3] != driveMotorMap[i][3]){
+    //   //if the current pwm value is greater than the previous pwm value then we need to ramp up
+    //   if(tempDriveMotorMap[i][3] < driveMotorMap[i][3]){
+    //     //we need to ramp up the pwm values for the motors that are changing direction
+    //     analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
        
 
-      }
-      //if the current pwm value is less than the previous pwm value then we need to ramp down
-      if(tempDriveMotorMap[i][3] > driveMotorMap[i][3]){
-        //we need to ramp down the pwm values for the motors that are changing direction
+    //   }
+    //   //if the current pwm value is less than the previous pwm value then we need to ramp down
+    //   if(tempDriveMotorMap[i][3] > driveMotorMap[i][3]){
+    //     //we need to ramp down the pwm values for the motors that are changing direction
       
-        analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
-      }
-    }
+    //     analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
+    //   }
+    // }
     //if the current pwm value is the same as the previous pwm value then we don't need to ramp up or down
     analogWrite(driveMotorMap[i][0], driveMotorMap[i][3] >= 0 ? driveMotorMap[i][3] : 0);
     //write the direction to the dir pin for each motor
